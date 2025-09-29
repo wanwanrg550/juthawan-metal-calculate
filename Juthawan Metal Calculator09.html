@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องคำนวณน้ำหนักวัสดุ</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        .logo {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .contact-info {
+            text-align: right;
+        }
+        .contact-info p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            flex-basis: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group select {
+            flex-basis: 50%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .result-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">
+            <!-- You can replace this with your logo image or text -->
+            
+        </div>
+        <div class="contact-info">
+            <p>โทร: 02-2940066-8</p>
+            <p>บริษัท จุฑาวรรณ จำกัด</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>เครื่องคำนวณน้ำหนักวัสดุ</h2>
+        
+        <div class="form-group">
+            <label for="material_type">เลือกประเภทวัสดุ:</label>
+            <select id="material_type" style="width: 100%;">
+                <option value="steel">เหล็ก/อลูมิเนียม</option>
+                <option value="stainless">สแตนเลส</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="grade">เลือกเกรดวัสดุ:</label>
+            <select id="grade" style="width: 100%;">
+                </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="shape">เลือกรูปทรง:</label>
+            <select id="shape" style="width: 100%;">
+                <option value="sheet">แผ่น (Sheet)</option>
+                <option value="flat_bar">แบน (Flat Bar)</option>
+                <option value="hexagon">หกเหลี่ยม (Hexagon)</option>
+                <option value="square_pipe">กล่องสี่เหลี่ยม (Square Pipe)</option>
+                <option value="rectangular_pipe">กล่องสี่เหลี่ยมผืนผ้า (Rectangular Pipe)</option>
+                <option value="angle">ฉาก (Angle)</option>
+                <option value="square_bar">สี่เหลี่ยมตัน (Square Bar)</option>
+                <option value="pipe">ท่อกลม (Pipe)</option>
+                <option value="round_bar">เส้นกลม (Round Bar)</option>
+            </select>
+        </div>
+
+        <div id="input-fields">
+            </div>
+        
+        <div class="form-group">
+            <label for="quantity">จำนวนที่ต้องการ:</label>
+            <input type="number" id="quantity" value="1" min="1" style="width: 100%;">
+        </div>
+
+        <button onclick="calculateWeight()">คำนวณ</button>
+
+        <hr style="margin-top: 20px;">
+        
+        <div class="result-box">
+            <span id="result">น้ำหนักรวม: 0.00 กิโลกรัม</span>
+        </div>
+    </div>
+
+    <script>
+        const PI = 3.14159265359;
+        
+        // Data for different material grades and their shape-dependent densities (kg/m^3)
+        // Grades with shape-dependent density store an object: { rect: density_for_sheet_bar_pipe, round: density_for_round_pipe }
+        // Grades with fixed density store a number.
+        const gradesData = {
+            'steel': {
+                // RULES 1 & 2: Steel (All Grades): Rect=7850, Round=6160
+                'S50C (เหล็กทั่วไป)': { rect: 7850, round: 6160 },
+                'SKD11 / KD11 / KD11S': { rect: 7850, round: 6160 },
+                'SKD61': { rect: 7850, round: 6160 },
+                'KDA1S': { rect: 7850, round: 6160 },
+                '1.2367': { rect: 7850, round: 6160 },
+                'KTV': { rect: 7850, round: 6160 },
+                'P20': { rect: 7850, round: 6160 },
+                'KPM30': { rect: 7850, round: 6160 },
+                'KPMAX': { rect: 7850, round: 6160 },
+                'SUJ2': { rect: 7850, round: 6160 },
+                'FH5': { rect: 7850, round: 6160 },
+                'S45C (เหล็กหัวแดง)': { rect: 7850, round: 6160 },
+                'SCM440 (เหล็กสีฟ้า)': { rect: 7850, round: 6160 },
+                
+                // RULES 3 & 4: Aluminum Grades (using fixed original values for 'round' as fallback)
+                // A5083: Rule 3 (2700) for rect.
+                'A5083 (อลูมิเนียม)': { rect: 2700, round: 2660 }, 
+                // A6061 & A7075: Rule 4 (2800) for rect (A6061 takes the later 2800 value).
+                'A6061 (อลูมิเนียม)': { rect: 2800, round: 2700 }, 
+                'A7075 (อลูมิเนียม)': { rect: 2800, round: 2810 } 
+            },
+            'stainless': {
+                // Stainless grades: No new rules, keep original fixed density regardless of shape.
+                '304 (ค่ากลาง)': 7930,
+                '301CSP': 7930,
+                '316L': 7980,
+                '430': 7800,
+                '441': 7700,
+                '420J2': 7750
+            }
+        };
+
+        // ฟังก์ชันสำหรับสร้าง Dropdown หน่วยวัดทั้งหมด
+        function getAllUnitSelect(id, defaultUnit = 'mm') {
+            const options = {
+                'm': { text: 'เมตร (m.)', value: 1000 },
+                'mm': { text: 'มิลลิเมตร (mm.)', value: 1 },
+                'cm': { text: 'เซนติเมตร (cm.)', value: 10 },
+                'inches': { text: 'นิ้ว (inches)', value: 25.4 },
+                'ft': { text: 'ฟุต (ft.)', value: 304.8 },
+                'hun': { text: 'หุล (hun)', value: 3.175 }
+            };
+
+            let selectHtml = `<select id="${id}" style="width: 100px; margin-left: 10px;">`;
+            for (const unit in options) {
+                const isSelected = unit === defaultUnit ? 'selected' : '';
+                selectHtml += `<option value="${options[unit].value}" ${isSelected}>${options[unit].text}</option>`;
+            }
+            selectHtml += `</select>`;
+            return selectHtml;
+        }
+
+        // ฟังก์ชันสำหรับสร้างช่องกรอกข้อมูล (ไม่มีการเปลี่ยนแปลง)
+        function updateInputFields() {
+            const shape = document.getElementById('shape').value;
+            const inputFieldsDiv = document.getElementById('input-fields');
+            inputFieldsDiv.innerHTML = '';
+            
+            let html = '';
+
+            if (shape === 'sheet' || shape === 'flat_bar') {
+                html += `<div class="input-group"><label for="thickness">ความหนา:</label><input type="number" id="thickness" step="0.01" min="0.1">${getAllUnitSelect('thickness_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="width">ความกว้าง:</label><input type="number" id="width" step="0.01" min="1">${getAllUnitSelect('width_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            } else if (shape === 'hexagon' || shape === 'square_bar') {
+                html += `<div class="input-group"><label for="size">ขนาด:</label><input type="number" id="size" step="0.01" min="1">${getAllUnitSelect('size_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            } else if (shape === 'square_pipe' || shape === 'rectangular_pipe') {
+                html += `<div class="input-group"><label for="thickness">ความหนา:</label><input type="number" id="thickness" step="0.01" min="0.1">${getAllUnitSelect('thickness_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="width">ความกว้าง:</label><input type="number" id="width" step="0.01" min="1">${getAllUnitSelect('width_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="height">ความสูง:</label><input type="number" id="height" step="0.01" min="1">${getAllUnitSelect('height_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            } else if (shape === 'angle') {
+                html += `<div class="input-group"><label for="thickness">ความหนา:</label><input type="number" id="thickness" step="0.01" min="0.1">${getAllUnitSelect('thickness_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="width1">ความกว้าง 1:</label><input type="number" id="width1" step="0.01" min="1">${getAllUnitSelect('width1_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="width2">ความกว้าง 2:</label><input type="number" id="width2" step="0.01" min="1">${getAllUnitSelect('width2_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            } else if (shape === 'square_bar') {
+                html += `<div class="input-group"><label for="size">ขนาด:</label><input type="number" id="size" step="0.01" min="1">${getAllUnitSelect('size_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            } else if (shape === 'pipe') {
+                html += `<div class="input-group"><label for="od">เส้นผ่านศูนย์กลางนอก:</label><input type="number" id="od" step="0.01" min="1">${getAllUnitSelect('od_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="id">เส้นผ่านศูนย์กลางใน:</label><input type="number" id="id" step="0.01" min="1">${getAllUnitSelect('id_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            } else if (shape === 'round_bar') {
+                html += `<div class="input-group"><label for="diameter">เส้นผ่านศูนย์กลาง:</label><input type="number" id="diameter" step="0.01" min="1">${getAllUnitSelect('diameter_unit', 'mm')}</div>`;
+                html += `<div class="input-group"><label for="length">ความยาว:</label><input type="number" id="length" step="0.01" min="0.01">${getAllUnitSelect('length_unit', 'm')}</div>`;
+            }
+
+            inputFieldsDiv.innerHTML = html;
+        }
+
+        // อัปเดต Dropdown เกรดวัสดุตามประเภทวัสดุ
+        function updateGradeDropdown() {
+            const materialType = document.getElementById('material_type').value;
+            const gradeDropdown = document.getElementById('grade');
+            
+            // Clear existing options
+            gradeDropdown.innerHTML = '';
+            
+            // Populate with new options
+            const currentGrades = gradesData[materialType];
+            for (const gradeName in currentGrades) {
+                const option = document.createElement('option');
+                // IMPORTANT: Store the grade name string, not the density value
+                option.value = gradeName; 
+                option.text = gradeName;
+                gradeDropdown.appendChild(option);
+            }
+
+            // Update input fields based on the new shape selection
+            updateInputFields();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateGradeDropdown(); // Initial population
+            document.getElementById('material_type').addEventListener('change', updateGradeDropdown);
+            document.getElementById('shape').addEventListener('change', updateInputFields);
+        });
+        
+        function calculateWeight() {
+            const shape = document.getElementById('shape').value;
+            const gradeName = document.getElementById('grade').value; 
+            const materialType = document.getElementById('material_type').value;
+            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+            
+            let density;
+            const gradeData = gradesData[materialType][gradeName];
+            
+            // --- Determine Density based on Shape and Grade ---
+            if (typeof gradeData === 'object' && gradeData !== null) {
+                // Determine shape group for grades that have shape-dependent densities
+                const rectShapes = ['sheet', 'flat_bar', 'square_bar', 'hexagon', 'square_pipe', 'rectangular_pipe', 'angle'];
+                const roundShapes = ['round_bar', 'pipe'];
+
+                if (rectShapes.includes(shape)) {
+                    density = gradeData.rect;
+                } else if (roundShapes.includes(shape)) {
+                    density = gradeData.round;
+                } else {
+                    // Fallback to rect density if shape is somehow not covered (shouldn't happen with current options)
+                    density = gradeData.rect; 
+                }
+            } else {
+                // Use the fixed density value for grades like Stainless Steel
+                density = gradeData;
+            }
+
+            if (!density || isNaN(density)) {
+                document.getElementById('result').innerText = `น้ำหนักรวม: 0.00 กิโลกรัม (Error: ไม่พบค่าความหนาแน่น)`;
+                return;
+            }
+            // --- Density Determination Complete ---
+
+            let weight_per_piece = 0;
+
+            try {
+                // Note: All dimensions (thickness, width, size, diameter) are converted to mm
+                // Length is converted to mm (default is m * 1000)
+                
+                if (shape === 'sheet' || shape === 'flat_bar') {
+                    const thickness = parseFloat(document.getElementById('thickness').value) * (parseFloat(document.getElementById('thickness_unit').value) || 1);
+                    const width = parseFloat(document.getElementById('width').value) * (parseFloat(document.getElementById('width_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    weight_per_piece = (thickness * width * length) * density / 1000000000;
+                } else if (shape === 'hexagon') {
+                    const size = parseFloat(document.getElementById('size').value) * (parseFloat(document.getElementById('size_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    const area_constant = (3 * Math.sqrt(3) / 2);
+                    weight_per_piece = (Math.pow(size, 2) * area_constant * length) * density / 1000000000;
+                } else if (shape === 'square_pipe' || shape === 'rectangular_pipe') {
+                    const thickness = parseFloat(document.getElementById('thickness').value) * (parseFloat(document.getElementById('thickness_unit').value) || 1);
+                    const width = parseFloat(document.getElementById('width').value) * (parseFloat(document.getElementById('width_unit').value) || 1);
+                    const height = parseFloat(document.getElementById('height').value) * (parseFloat(document.getElementById('height_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    // Area_mm^2 = (W*H) - ((W - 2T) * (H - 2T))
+                    const area_mm = (width * height) - ((width - (thickness * 2)) * (height - (thickness * 2)));
+                    weight_per_piece = area_mm * length * density / 1000000000;
+                } else if (shape === 'angle') {
+                    const thickness = parseFloat(document.getElementById('thickness').value) * (parseFloat(document.getElementById('thickness_unit').value) || 1);
+                    const width1 = parseFloat(document.getElementById('width1').value) * (parseFloat(document.getElementById('width1_unit').value) || 1);
+                    const width2 = parseFloat(document.getElementById('width2').value) * (parseFloat(document.getElementById('width2_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    // Area_mm^2 = (W1*T) + ((W2-T)*T)
+                    const area_mm = (width1 * thickness) + ((width2 - thickness) * thickness);
+                    weight_per_piece = area_mm * length * density / 1000000000;
+                } else if (shape === 'square_bar') {
+                    const size = parseFloat(document.getElementById('size').value) * (parseFloat(document.getElementById('size_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    // Area_mm^2 = S^2
+                    weight_per_piece = Math.pow(size, 2) * length * density / 1000000000;
+                } else if (shape === 'pipe') {
+                    const od = parseFloat(document.getElementById('od').value) * (parseFloat(document.getElementById('od_unit').value) || 1);
+                    const id = parseFloat(document.getElementById('id').value) * (parseFloat(document.getElementById('id_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    // Area_mm^2 = (OD^2 - ID^2) * PI / 4
+                    const area_mm = (Math.pow(od, 2) - Math.pow(id, 2)) * PI / 4;
+                    weight_per_piece = area_mm * length * density / 1000000000;
+                } else if (shape === 'round_bar') {
+                    const diameter = parseFloat(document.getElementById('diameter').value) * (parseFloat(document.getElementById('diameter_unit').value) || 1);
+                    const length = parseFloat(document.getElementById('length').value) * (parseFloat(document.getElementById('length_unit').value) || 1);
+                    // Area_mm^2 = D^2 * PI / 4
+                    const area_mm = Math.pow(diameter, 2) * PI / 4;
+                    weight_per_piece = area_mm * length * density / 1000000000;
+                }
+            } catch (e) {
+                console.error("Calculation Error:", e);
+                weight_per_piece = 0;
+            }
+            
+            const total_weight = weight_per_piece * quantity;
+            document.getElementById('result').innerText = `น้ำหนักรวม: ${total_weight.toFixed(2)} กิโลกรัม (Density: ${density.toFixed(0)} kg/m³)`;
+        }
+    </script>
+
+</body>
+</html>
